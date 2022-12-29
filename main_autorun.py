@@ -3,7 +3,7 @@
 # 版权声明：该软件（MeteaseCloudMusic）为「zch」所有，转载请附上本声明。
 # Apache 2.0
 # 
-# version: 1.2
+# version: 1.3
 # 
 # 版本更新说明：
 # v1.0 程序首个版本
