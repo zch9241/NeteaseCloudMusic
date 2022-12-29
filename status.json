@@ -1,5 +1,9 @@
 {
-    "lastrun": "362",
-    "runnum": 310,
-    "currentnum": 310
+    "lastrun": "",
+    "runnum": 0,
+    "currentnum": 0,
+    "stat": {
+        "runtimes": 0,
+        "songtimes": 0
+    }
 }

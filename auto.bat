@@ -1,2 +1,5 @@
-cd C:\Users\Lenovo\Desktop\__MyCode\NeteaseCloudMusic\v1.2
+@echo off
+set str=%~dp0
+cd %str%
 python main_autorun.py 310
+pause

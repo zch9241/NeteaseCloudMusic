@@ -9,6 +9,8 @@
 # v1.0 程序首个版本
 # v1.1 优化使用体验（不激活窗口）
 # v1.2 程序自动化，便于使用任务计划程序。须在命令行下使用autorun_main.py + 运行次数 方可使用
+# v1.3 优化使用体验：1.多次登录时任务照常进行；2.status.json中增加了运行统计；3.任务完成后自动关闭云音乐
+#      增加了log的一些细节并更改了log保存位置
 # 
 
 
@@ -19,23 +21,23 @@ import os
 import threading
 import time
 
-import win32gui
-import win32con
 import win32api
+import win32con
+import win32gui
+
+
+
 
 task_count = 0  #任务计数
 text = ''
 time_ = 0
 classname = 'OrpheusBrowserHost'
+hwnd = ''
 number = 0
 #number = int(input('[main(input)]: 输入循环次数: '))
 #number = int(310)
 
-
-hwnd = win32gui.FindWindow(classname, None)    #ClassName,WindowName
-#print(hwnd)
-
-
+#主程序
 def call_exe(name, pathprint = None):
     '''
     # call_exe
@@ -61,8 +63,11 @@ def task_finished():
     简易计数器
     '''
     global task_count
+
     task_count = task_count + 1
+
     writer(currentnum = task_count)
+
     return int(task_count)
 
 def pausebreak():
@@ -95,7 +100,7 @@ def checktext(text_now, text_compare = None):
     while True:
         time.sleep(5)
         time_ = time_ + 5
-        logger.debug('[checktext]: 当前等待时间 %d s' % time_)
+        logger.debug('[checktext] 当前等待时间 %d s' % time_)
 
         if time_ >= 70:
             time_ = 0
@@ -174,112 +179,182 @@ def supervisor():
         else:
             flag = flag + 1
             continue
+#
+
+#辅助程序
+class NeteaseHelper(object):
+    def netease_finder(self):
+        '''
+        # 寻找cloudmusic.exe所在路径
+        - return: cloudmusic.exe所在路径
+        '''
+        sub_key = r'Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Compatibility Assistant\Store'
+        key = win32api.RegOpenKey(win32con.HKEY_CURRENT_USER, sub_key, 0, win32con.KEY_READ)
+        info = win32api.RegQueryInfoKey(key)
+        for i in range(0, info[1]):  
+            value = win32api.RegEnumValue(key, i)
+            #print(value)
+            if value[0].endswith('cloudmusic.exe'):
+                return value[0]
+
+    def call_netease(self):
+        '''
+        运行cloudmusic.exe
+        '''
+        global hwnd
+
+        path = NeteaseHelper().netease_finder()
+        logger.debug('[call_netease] path: ' + path)
+        filename = path.split('\\')[-1]
+        path = path.replace(filename, '')
+        command = 'd: & cd ' + path + ' & ' + filename
+        os.popen(command)
+        #os.system(command)
+        time.sleep(10)
+
+        while hwnd == '':
+            hwnd = win32gui.FindWindow(classname, None)    #ClassName,WindowName
+            if hwnd != '':
+                logger.debug('[call_netease] 已找到窗口句柄: %s' % hwnd)
+                break
+            logger.warn('[call_netease] 未能找到窗口句柄...请检查 cloudmusic.exe 是否运行或重启本程序')
+            time.sleep(1)
+            logger.info('[call_netease] 重试...')
+
+
+    def exit_netease(self):
+        '''
+        结束cloudmusic.exe
+        '''
+        command = 'taskkill -f -im cloudmusic.exe'
+        os.system(command)
 
 def writer(currentnum):
-	'''
-	# 写入程序运行次数
-	'''
-	with open('status.json','r') as f:
-		content = json.load(f)
-		content['currentnum'] = currentnum
-		f.close()
-		with open('status.json','w') as f:
-			json.dump(content, f, indent = 4)
-			f.close()
+    '''
+    更新status.json
+    '''
 
-def netease_finder():
-    sub_key = r'Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Compatibility Assistant\Store'
-    key = win32api.RegOpenKey(win32con.HKEY_CURRENT_USER, sub_key, 0, win32con.KEY_READ)
-    info = win32api.RegQueryInfoKey(key)
-    for i in range(0, info[1]):  
-        value = win32api.RegEnumValue(key, i)
-        #print(value)
-        if value[0].endswith('cloudmusic.exe'):
-            return value[0]
+    with open('status.json','r') as f:
+        content = json.load(f)
+        content['currentnum'] = currentnum
+        f.close()
+        with open('status.json','w') as f:
+            json.dump(content, f, indent = 4)
+            f.close()
 
-def call_netease():
-    path = netease_finder()
-    logger.debug('[call_netease]: path: ' + path)
-    filename = path.split('\\')[-1]
-    path = path.replace(filename, '')
-    command = 'd: & cd ' + path + ' & ' + filename
-    os.system(command)
-    time.sleep(5)
+def log_helper():
+    '''
+    # 创建log文件
+    - return: log文件路径
+    '''
+    path = os.getcwd()
+    try:
+        curmonth = time.strftime('%B', time.localtime())
+        folder = path + '\\logs\\' + curmonth
+        os.mkdir(folder)
+    except FileExistsError:
+        logger.debug('DEBUG [log_helper] [FileExistsError] 目录存在: %s' % folder)
 
-def exit_netease():
-    command = 'taskkill -f -im cloudmusic.exe'
-    os.system(command)
-
+    curtime = time.strftime('%c', time.localtime()).replace(':', '-')
+    filename = folder + '\\' + curtime + '.log'
+    with open(file = filename,mode = 'w', newline='\n') as f:
+        f.write('logfile from %s \n\n\n' % time.strftime('%c', time.localtime()))
+        f.close()
+        print('DEBUG [log_helper] log文件已创建 -- %s' % filename.split('\\')[-1])
+    
+    return str(filename)
+#
 
 if __name__ =='__main__':
+    #历史
+    #运行次数累加
+    with open('status.json','r') as f:
+        content = json.load(f)
+        f.close()
+        content["stat"]["runtimes"] = 1 + int(content["stat"]["runtimes"])
+        content["stat"]["songtimes"] = int(content["currentnum"]) + int(content["stat"]["songtimes"])
+
+        with open('status.json','w') as f:
+            json.dump(content, f, indent = 4)
+            f.close()
+
+    #日志相关
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+
+    console_handler = logging.StreamHandler()    #输出到控制台
+    file_handler = logging.FileHandler(filename = log_helper(), encoding = 'UTF-8')    #输出到文件
+
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
+
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+    file_handler.setFormatter(formatter)
+    #
+
+    #定义运行参数
+    parse = argparse.ArgumentParser()
+    parse.add_argument('n', type = int, help = '输入循环次数(int)')
+    args = parse.parse_args()
+    #
+
+    number = int(args.n)
+
 	#获取程序运行情况，防止重复运行
-	with open('status.json','r') as f:
-		content = json.load(f)
-		if content['lastrun'] == time.strftime('%j', time.localtime()):
-			run_done = True
-			f.close()
-			print('[main(INFO)]: 今日已运行过此程序，程序即将退出...')
-		else:
-			run_done = False
-			f.close()
-			
+    with open('status.json','r') as f:
+        content = json.load(f)
+        if content['lastrun'] == time.strftime('%j', time.localtime()):
+            LastRunNum = int(content["currentnum"])
+            f.close()
 
+            logger.info('[main] 今日已运行过此程序。')
+            logger.info('[main] 运行次数：%d' % LastRunNum)
 
-	if run_done == False:
-		#日志相关
-		logger = logging.getLogger(__name__)
-		logger.setLevel(logging.DEBUG)
-	
-		console_handler = logging.StreamHandler()    #输出到控制台
-		file_handler = logging.FileHandler(filename='log.log', encoding='UTF-8')    #输出到文件
+            if LastRunNum < number:
+                number = number - LastRunNum    #需执行的次数
+                logger.info('[main] 还需运行 %d 次' % number)
+                run_done = False
+            else:
+                logger.info('[main] 今日运行次数足够，程序即将退出...')
+                run_done = True
+        else:
+            run_done = False
+            f.close()
 
-		logger.addHandler(console_handler)
-		logger.addHandler(file_handler)
-	
-		formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-		console_handler.setFormatter(formatter)
-		file_handler.setFormatter(formatter)
-		#
-	
-		#定义运行参数
-		parse = argparse.ArgumentParser()
-		parse.add_argument('n', type = int, help = '输入循环次数(int)')
-		args = parse.parse_args()
-		#
+    if run_done == False:
+        logger.info('[main] 循环次数: '+ str(number))
 
-		number = int(args.n)
-		logger.info('[main] 循环次数: '+ str(number))
+        NeteaseHelper().call_netease()
 
-		with open('status.json','r') as f:
-			content = json.load(f)
-			content['lastrun'] = time.strftime('%j', time.localtime())
-			content['runnum'] = number
-			f.close()
-			with open('status.json','w') as f:
-				json.dump(content, f, indent = 4)
-				f.close()
-		
-		call_netease()
+        with open('status.json','r') as f:
+            content = json.load(f)
+            content['lastrun'] = time.strftime('%j', time.localtime())
+            content['runnum'] = number
+            f.close()
+            with open('status.json','w') as f:
+                json.dump(content, f, indent = 4)
+                f.close()
 
-		#程序主体
-		pausebreak()
-		lock = threading.Lock()
-		cond = threading.Condition(lock = lock)
-		taskA = threading.Thread(target = worker)
-		taskB = threading.Thread(target = supervisor, daemon = True)
-		taskC = threading.Thread(target = isexist, daemon = True)
-		taskC.start()
-		taskA.start()
-		taskB.start()
-		taskA.join()
-		pausebreak()
-		#
+        #程序主体
+        pausebreak()
+        lock = threading.Lock()
+        cond = threading.Condition(lock = lock)
+        taskA = threading.Thread(target = worker)
+        taskB = threading.Thread(target = supervisor, daemon = True)
+        taskC = threading.Thread(target = isexist, daemon = True)
+        taskC.start()
+        taskA.start()
+        taskB.start()
+        taskA.join()
+        pausebreak()
+        #
 
-		exit_netease()
+        NeteaseHelper().exit_netease()
 
-		logger.info('------end------')
+        logger.info('------end------')
 
-	elif run_done == True:
-		pass
+    elif run_done == True:
+        pass
 
 
