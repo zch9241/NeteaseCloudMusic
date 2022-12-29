@@ -4,8 +4,8 @@
 block_cipher = None
 
 
-a = Analysis(['main.py'],
-             pathex=['C:\\Users\\x550\\Desktop\\NeteaseCloudMusic'],
+a = Analysis(['C:\\Users\\Lenovo\\Desktop\\MyCode\\NeteaseCloudMusic\\v1.1\\main.py'],
+             pathex=[],
              binaries=[],
              datas=[],
              hiddenimports=[],
@@ -37,4 +37,4 @@ exe = EXE(pyz,
           disable_windowed_traceback=False,
           target_arch=None,
           codesign_identity=None,
-          entitlements_file=None , icon='C:\\Users\\x550\\DLLs\\py.ico')
+          entitlements_file=None )

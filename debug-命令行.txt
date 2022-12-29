@@ -1,0 +1,158 @@
+wait开始
+[main(info)]: 当前等待时间 5 s
+[main(info)]: 当前等待时间 10 s
+[main(info)]: 当前等待时间 15 s
+[main(info)]: 当前等待时间 20 s
+[main(info)]: 当前等待时间 25 s
+[main(info)]: 当前等待时间 30 s
+[main(info)]: 当前等待时间 35 s
+[main(info)]: 当前等待时间 40 s
+[main(info)]: 当前等待时间 45 s
+[main(info)]: 当前等待时间 50 s
+[main(info)]: 当前等待时间 55 s
+[main(info)]: 当前等待时间 60 s
+[main(info)]: 当前等待时间 65 s
+[main(info)]: 当前等待时间 70 s
+wait结束
+[main(info)]: 调用 switch.exe 路径: C:\Users\Lenovo\Desktop\MyCode\NeteaseCloudMusic\v1.1//bin//switch.exe
+[main(info)]: 当前曲目:  Rainy Days - John Arn 计数:  209
+wait开始
+[main(info)]: 当前等待时间 5 s
+[main(info)]: 当前等待时间 10 s
+[main(info)]: 当前等待时间 15 s
+[main(info)]: 当前等待时间 20 s
+[main(info)]: 当前等待时间 25 s
+[main(info)]: 当前等待时间 30 s
+[main(info)]: 当前等待时间 35 s
+[main(info)]: 当前等待时间 40 s
+[main(info)]: 当前等待时间 45 s
+[main(info)]: 当前等待时间 50 s
+[main(info)]: 当前等待时间 55 s
+[main(info)]: 当前等待时间 60 s
+[main(info)]: 当前等待时间 65 s
+[main(info)]: 当前等待时间 70 s
+wait结束
+[main(info)]: 调用 switch.exe 路径: C:\Users\Lenovo\Desktop\MyCode\NeteaseCloudMusic\v1.1//bin//switch.exe
+[main(info)]: 当前曲目:  花火 - Fragile 计数:  210
+wait开始
+[main(info)]: 当前等待时间 5 s
+[main(info)]: 当前等待时间 10 s
+[main(info)]: 当前等待时间 15 s
+[main(info)]: 当前等待时间 20 s
+[main(info)]: 当前等待时间 25 s
+[main(info)]: 当前等待时间 30 s
+[main(info)]: 当前等待时间 35 s
+[main(info)]: 当前等待时间 40 s
+[main(info)]: 当前等待时间 45 s
+[main(info)]: 当前等待时间 50 s
+[main(info)]: 当前等待时间 55 s
+[main(info)]: 当前等待时间 60 s
+[main(info)]: 当前等待时间 65 s
+[main(info)]: 当前等待时间 70 s
+wait结束
+[main(info)]: 调用 switch.exe 路径: C:\Users\Lenovo\Desktop\MyCode\NeteaseCloudMusic\v1.1//bin//switch.exe
+[main(info)]: 当前曲目:  花火 - Fragile 计数:  211
+wait开始
+[main(info)]: 当前等待时间 5 s
+[main(info)]: 当前等待时间 10 s
+[main(info)]: 当前等待时间 15 s
+[main(info)]: 当前等待时间 20 s
+[main(info)]: 当前等待时间 25 s
+[main(info)]: 当前等待时间 30 s
+[main(info)]: 当前等待时间 35 s
+[main(info)]: 当前等待时间 40 s
+[main(info)]: 当前等待时间 45 s
+[main(info)]: 当前等待时间 50 s
+[main(info)]: 当前等待时间 55 s
+[main(info)]: 当前等待时间 60 s
+[main(info)]: 当前等待时间 65 s
+[main(info)]: 当前等待时间 70 s
+wait结束
+[main(info)]: 调用 switch.exe 路径: C:\Users\Lenovo\Desktop\MyCode\NeteaseCloudMusic\v1.1//bin//switch.exe
+[main(info)]: 当前曲目:  花火 - Fragile 计数:  212
+wait开始
+[main(info)]: 当前等待时间 5 s
+[main(info)]: 当前等待时间 10 s
+[main(info)]: 当前等待时间 15 s
+[main(info)]: 当前等待时间 20 s
+[main(info)]: 当前等待时间 25 s
+[main(info)]: 当前等待时间 30 s
+[main(info)]: 当前等待时间 35 s
+[main(info)]: 当前等待时间 40 s
+[main(info)]: 当前等待时间 45 s
+[main(info)]: 当前等待时间 50 s
+[main(info)]: 当前等待时间 55 s
+[main(info)]: 当前等待时间 60 s
+[main(info)]: 当前等待时间 65 s
+[main(info)]: 当前等待时间 70 s
+wait结束
+[main(info)]: 调用 switch.exe 路径: C:\Users\Lenovo\Desktop\MyCode\NeteaseCloudMusic\v1.1//bin//switch.exe
+[main(info)]: 当前曲目:  花火 - Fragile 计数:  213
+wait开始
+[main(info)]: 当前等待时间 5 s
+[main(info)]: 当前等待时间 10 s
+[main(info)]: 当前等待时间 15 s
+[main(info)]: 当前等待时间 20 s
+[main(info)]: 当前等待时间 25 s
+[main(info)]: 当前等待时间 30 s
+[main(info)]: 当前等待时间 35 s
+[main(info)]: 当前等待时间 40 s
+[main(info)]: 当前等待时间 45 s
+[main(info)]: 当前等待时间 50 s
+[main(info)]: 当前等待时间 55 s
+[main(info)]: 当前等待时间 60 s
+[main(info)]: 当前等待时间 65 s
+[main(info)]: 当前等待时间 70 s
+wait结束
+[main(info)]: 调用 switch.exe 路径: C:\Users\Lenovo\Desktop\MyCode\NeteaseCloudMusic\v1.1//bin//switch.exe
+[main(info)]: 当前曲目:  花火 - Fragile 计数:  214
+wait开始
+[main(info)]: 当前等待时间 5 s
+[main(info)]: 当前等待时间 10 s
+[main(info)]: 当前等待时间 15 s
+[main(info)]: 当前等待时间 20 s
+[main(info)]: 当前等待时间 25 s
+[main(info)]: 当前等待时间 30 s
+[main(info)]: 当前等待时间 35 s
+[main(info)]: 当前等待时间 40 s
+[main(info)]: 当前等待时间 45 s
+[main(info)]: 当前等待时间 50 s
+[main(info)]: 当前等待时间 55 s
+[main(info)]: 当前等待时间 60 s
+[main(info)]: 当前等待时间 65 s
+[main(info)]: 当前等待时间 70 s
+wait结束
+[main(info)]: 调用 switch.exe 路径: C:\Users\Lenovo\Desktop\MyCode\NeteaseCloudMusic\v1.1//bin//switch.exe
+[main(info)]: 当前曲目:  花火 - Fragile 计数:  215
+wait开始
+[main(info)]: 当前等待时间 5 s
+[main(info)]: 当前等待时间 10 s
+[main(info)]: 当前等待时间 15 s
+[main(info)]: 当前等待时间 20 s
+[main(info)]: 当前等待时间 25 s
+[main(info)]: 当前等待时间 30 s
+[main(info)]: 当前等待时间 35 s
+[main(info)]: 当前等待时间 40 s
+[main(info)]: 当前等待时间 45 s
+[main(info)]: 当前等待时间 50 s
+[main(info)]: 当前等待时间 55 s
+[main(info)]: 当前等待时间 60 s
+[main(info)]: 当前等待时间 65 s
+[main(info)]: 当前等待时间 70 s
+wait结束
+[main(info)]: 调用 switch.exe 路径: C:\Users\Lenovo\Desktop\MyCode\NeteaseCloudMusic\v1.1//bin//switch.exe
+[main(info)]: 当前曲目:  花火 - Fragile 计数:  216
+wait开始
+[main(info)]: 当前等待时间 5 s
+[main(info)]: 当前等待时间 10 s
+[main(info)]: 当前等待时间 15 s
+[main(info)]: 当前等待时间 20 s
+[main(info)]: 当前等待时间 25 s
+[main(info)]: 当前等待时间 30 s
+[main(info)]: 当前等待时间 35 s
+[main(info)]: 当前等待时间 40 s
+[main(info)]: 当前等待时间 45 s
+[main(info)]: 当前等待时间 50 s
+[main(info)]: 当前等待时间 55 s
+[main(info)]: 当前等待时间 60 s
+[main(info)]: 当前等待时间 65 s

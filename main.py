@@ -7,6 +7,7 @@
 # 
 # 版本更新说明：
 # v1.0 程序首个版本
+# v1.1 优化使用体验（不激活窗口）
 # 
 # 
 
@@ -33,22 +34,16 @@ def call_exe(name, pathprint = None):
     - name: 应用程序名
     '''
     project_path = os.getcwd()
-    path = project_path + r'\NeteaseCloudMusic\bin'
-    exe_path = path + '//' + str(name)
-    #使用py.exe时，注释上两行 | 使用vs code运行
-    #exe_path = project_path + '//bin//' + name
+    #注释start
+    #path = project_path + r'\Mycode\NeteaseCloudMusic\bin'
+    #exe_path = path + '//' + str(name)
+    #注释end
+    #使用vs code运行时，请注意打开的文件夹路径即为os.getcwd()函数返回值 | 使用py.exe时，注释上两行，去掉下一行 # 注释
+    exe_path = project_path + '//bin//' + name
     if pathprint == True:
         print('[main(info)]: 调用', name, '路径:', exe_path)
 
     os.system(exe_path)
-
-def isexist():
-    '''
-    # isexist
-    确保窗口存在
-    '''
-    while True:
-        call_exe(name = 'check.exe')
 
 def task_finished():
     '''
@@ -65,7 +60,7 @@ def pausebreak():
 def run():
     global text
     global cond
-        
+
     call_exe(name = 'switch.exe', pathprint = True)
     time.sleep(1)
 
@@ -80,14 +75,15 @@ def run():
 
 def checktext(text_now, text_compare = None):
     global cond
-    global text
     global number
+    global text
     global time_
     global task_count
+
     while True:
         time.sleep(5)
         time_ = time_ + 5
-        print(time_)
+        print('[main(info)]: 当前等待时间 %d s' % time_)
 
         if time_ >= 70:
             time_ = 0
@@ -107,6 +103,14 @@ def checktext(text_now, text_compare = None):
         elif text_now == text:
             break    #正常情况(time_小于70s，曲目时长大于70s)
 
+def isexist():
+    '''
+    # isexist
+    确保窗口存在
+    '''
+    while True:
+        call_exe(name = 'check.exe')
+
 def worker():
     '''
     工作者
@@ -120,14 +124,14 @@ def worker():
             run()
             number = number - 1
             flag = flag + 1
-            print('完成')
+
             cond.release()
             continue
         elif number > 0 and flag != 0:
             cond.acquire()
             run()
             number = number - 1
-            print('完成')
+
             cond.release()
             continue
         else:
