@@ -3,7 +3,7 @@
 # 版权声明：该软件（MeteaseCloudMusic）为「zch」所有，转载请附上本声明。
 # Apache 2.0
 # 
-# version: 1.2
+# version: 1.3.1
 # 
 # 版本更新说明：
 # v1.0 程序首个版本
@@ -11,6 +11,7 @@
 # v1.2 程序自动化，便于使用任务计划程序。须在命令行下使用autorun_main.py + 运行次数 方可使用
 # v1.3 优化使用体验：1.多次登录时任务照常进行；2.status.json中增加了运行统计；3.任务完成后自动关闭云音乐
 #      增加了log的一些细节并更改了log保存位置
+# v1.3.1 修改了程序运行次数判定，增加程序运行结束时的通知
 # 
 
 
@@ -24,9 +25,7 @@ import time
 import win32api
 import win32con
 import win32gui
-
-
-
+from win10toast import ToastNotifier
 
 task_count = 0  #任务计数
 text = ''
@@ -364,5 +363,4 @@ if __name__ =='__main__':
 
     elif run_done == True:
         pass
-
-
+    ToastNotifier().show_toast('notification', '程序运行完成', '.\\icon\\py.ico')
