@@ -126,6 +126,7 @@ def isexist():
     '''
     while True:
         call_exe(name = 'check.exe')
+        time.sleep(1)
 
 def worker():
     '''
@@ -216,7 +217,7 @@ class NeteaseHelper(object):
             if hwnd != '':
                 logger.debug('[call_netease] 已找到窗口句柄: %s' % hwnd)
                 break
-            logger.warn('[call_netease] 未能找到窗口句柄...请检查 cloudmusic.exe 是否运行或重启本程序')
+            logger.warn("[call_netease] 未能找到窗口句柄...请检查'cloudmusic.exe'是否运行或重启本程序")
             time.sleep(1)
             logger.info('[call_netease] 重试...')
 
@@ -225,7 +226,7 @@ class NeteaseHelper(object):
         '''
         结束cloudmusic.exe
         '''
-        command = 'taskkill -f -im cloudmusic.exe'
+        command = 'taskkill -f -im check.exe & taskkill -f -im cloudmusic.exe'
         os.system(command)
 
 def writer(currentnum):
@@ -364,3 +365,8 @@ if __name__ =='__main__':
     elif run_done == True:
         pass
     ToastNotifier().show_toast('notification', '程序运行完成', '.\\icon\\py.ico')
+#Python WNDPROC handler failed
+#Traceback (most recent call last):
+#  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python310\lib\site-packages\win10toast\__init__.py", line 153, in on_destroy
+#    Shell_NotifyIcon(NIM_DELETE, nid)
+#pywintypes.error: (-2147467259, 'Shell_NotifyIcon', '未指定的错误')
