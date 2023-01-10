@@ -124,7 +124,7 @@ def isexist():
     # isexist
     确保窗口存在
     '''
-    while True:
+    while taskA.is_alive():
         call_exe(name = 'check.exe')
         time.sleep(1)
 
@@ -224,16 +224,19 @@ class NeteaseHelper(object):
 
     def exit_netease(self):
         '''
-        结束cloudmusic.exe
+        结束相关程序
         '''
-        command = 'taskkill -f -im check.exe & taskkill -f -im cloudmusic.exe'
-        os.system(command)
+        command0 = 'taskkill -f -im check.exe'
+        os.popen(command0)
+        time.sleep(1)
+        command1 = 'taskkill -f -im cloudmusic.exe & taskkill -f -im cloudmusic_reporter.exe'
+        os.popen(command1)
+        logger.info('[exit_netease] 相关程序已结束运行')
 
 def writer(currentnum):
     '''
     更新status.json
     '''
-
     with open('status.json','r') as f:
         content = json.load(f)
         content['currentnum'] = currentnum
@@ -351,9 +354,10 @@ if __name__ =='__main__':
         taskA = threading.Thread(target = worker)
         taskB = threading.Thread(target = supervisor, daemon = True)
         taskC = threading.Thread(target = isexist, daemon = True)
-        taskC.start()
         taskA.start()
         taskB.start()
+        time.sleep(0.1)
+        taskC.start()
         taskA.join()
         pausebreak()
         #
