@@ -3,7 +3,7 @@
 # 版权声明：该软件（MeteaseCloudMusic）为「zch」所有，转载请附上本声明。
 # Apache 2.0
 # 
-# version: 1.3.1
+# version: 1.4
 # 
 # 版本更新说明：
 # v1.0 程序首个版本
@@ -12,7 +12,14 @@
 # v1.3 优化使用体验：1.多次登录时任务照常进行；2.status.json中增加了运行统计；3.任务完成后自动关闭云音乐
 #      增加了log的一些细节并更改了log保存位置
 # v1.3.1 修改了程序运行次数判定，增加程序运行结束时的通知
+# v1.4 增加了登录判断功能（可选）:1.使用OCR, 访问ocr.space获取apikey；
+#                               2.屏幕缩放比
+#                               填写至<class> OCR <func>__init__函数中相应位置
+#      运行参数调整: autorun_main.py [num] [ocr]
+#              （example: autorun.py 310 True   #循环310次，使用OCR）
 # 
+#
+
 
 
 import argparse
@@ -21,7 +28,10 @@ import logging
 import os
 import threading
 import time
+import requests
 
+from PIL import Image
+import win32ui
 import win32api
 import win32con
 import win32gui
@@ -217,7 +227,7 @@ class NeteaseHelper(object):
             if hwnd != '':
                 logger.debug('[call_netease] 已找到窗口句柄: %s' % hwnd)
                 break
-            logger.warn("[call_netease] 未能找到窗口句柄...请检查'cloudmusic.exe'是否运行或重启本程序")
+            logger.warning("[call_netease] 未能找到窗口句柄...请检查'cloudmusic.exe'是否运行或重启本程序")
             time.sleep(1)
             logger.info('[call_netease] 重试...')
 
@@ -266,6 +276,119 @@ def log_helper():
         print('DEBUG [log_helper] log文件已创建 -- %s' % filename.split('\\')[-1])
     
     return str(filename)
+
+class OCR(object):
+    def __init__(self):
+        self.apikey = ''    #你的api_key
+        self.sacle = 1.25     #屏幕缩放比125%
+        self.errorcode = 0
+
+    def screenshot(self):
+        hwnd = win32gui.FindWindow('OrpheusBrowserHost', None)
+        # 激活窗口
+        win32gui.SetForegroundWindow(hwnd)
+        win32gui.ShowWindow(hwnd, win32con.SW_SHOWMAXIMIZED)
+        time.sleep(5)
+        # 截图整个桌面
+        # 获取桌面
+        hdesktop = win32gui.GetDesktopWindow()
+        # 分辨率适应
+        width = int(win32api.GetSystemMetrics(win32con.SM_CXVIRTUALSCREEN) * self.sacle)
+        height = int(win32api.GetSystemMetrics(win32con.SM_CYVIRTUALSCREEN) * self.sacle)
+        left = int(win32api.GetSystemMetrics(win32con.SM_XVIRTUALSCREEN) * self.sacle)
+        top = int(win32api.GetSystemMetrics(win32con.SM_YVIRTUALSCREEN) * self.sacle)
+        # 创建设备描述表
+        desktop_dc = win32gui.GetWindowDC(hdesktop)
+        img_dc = win32ui.CreateDCFromHandle(desktop_dc)
+        # 创建一个内存设备描述表
+        mem_dc = img_dc.CreateCompatibleDC()
+        # 创建位图对象
+        screenshot = win32ui.CreateBitmap()
+        screenshot.CreateCompatibleBitmap(img_dc, width, height)
+        mem_dc.SelectObject(screenshot)
+        # 截图至内存设备描述表
+        mem_dc.BitBlt((0, 0), (width, height), img_dc, (0, 0), win32con.SRCCOPY)
+        # 将截图保存到文件中
+        screenshot.SaveBitmapFile(mem_dc, 'screenshot.bmp')
+        # 内存释放
+        mem_dc.DeleteDC()
+        win32gui.DeleteObject(screenshot.GetHandle())
+        win32gui.ShowWindow(hwnd, win32con.SW_HIDE)
+
+        box = (1425,0,1500,75)
+
+        img = Image.open('screenshot.bmp')
+
+        rect = img.crop(box)
+
+        result_image = Image.new('RGB', (75,75), (0,0,0,0)) #mode, result size, color
+        result_image.paste(rect, (0,0), mask=0)
+        result_image.save('username.jpg')
+
+    def ocr_space_file(self, filename, overlay=False, language='eng'):
+        """ OCR.space API request with local file.
+            Python3.5 - not tested on 2.7
+        :param filename: Your file path & name.
+        :param overlay: Is OCR.space overlay required in your response.
+                        Defaults to False.
+        :param api_key: OCR.space API key.
+                        Defaults to 'helloworld'.
+        :param language: Language code to be used in OCR.
+                        List of available language codes can be found on https://ocr.space/OCRAPI
+                            Defaults to 'en'.
+        :return: Result in JSON format.
+        """
+
+        payload = {'isOverlayRequired': overlay,
+                'apikey': self.apikey,
+                'language': language,
+                'OCREngine': 5
+                }
+        with open(filename, 'rb') as f:
+            r = requests.post('https://api.ocr.space/parse/image',
+                            files={filename: f},
+                            data=payload,
+                            )
+        return r.content.decode()
+
+    def main(self, language = 'eng'):
+        '''
+        实现账户登录状况判断
+        '''
+        OCR().screenshot()
+        logger.info('[OCR(main)] 截图完成')
+        while True:
+            logger.info('[OCR(main)] 上传截图至 ocr.space')
+            res0 = json.loads(OCR().ocr_space_file(filename = 'username.jpg', language = 'chs'))
+            if res0["IsErroredOnProcessing"] == True:
+                logger.warning('[OCR(main)] 请求失败 %s' % (res0["ErrorMessage"]))
+                time.sleep(1)
+                logger.info('[OCR(main)] 重试...')
+                continue
+            else:
+                try:
+                    username = res0["ParsedResults"][0]["TextOverlay"]["Lines"][0]["LineText"]
+                    logger.info('[OCR(info)] OCR成功 用户名: %s' % username)
+                    break
+                except IndexError:
+                    res1 = json.loads(OCR().ocr_space_file(filename = 'username.jpg', language = language))
+                    if res0["ParsedResults"][0]["TextOverlay"]["Lines"] == [] and res1["ParsedResults"][0]["TextOverlay"]["Lines"] == []:
+                        self.errorcode = 1
+                        username = ''
+                    elif res0["ParsedResults"][0]["TextOverlay"]["Lines"] == []:
+                        username = res1["ParsedResults"][0]["TextOverlay"]["Lines"]
+                        logger.info('[OCR(info)] OCR成功 用户名: %s' % username)
+                    break
+
+        if username == r'未登录':
+            self.errorcode = 2
+            logger.warning('[OCR(main)] 请检查登录状态 (errorcode: %d)' % self.errorcode)
+            ToastNotifier().show_toast('notification', '未登录，请检查登录状态', '.\\icon\\py.ico')
+        elif username == '':
+            logger.critical('[OCR(main)] 无法识别图像中的文字，请检查截图是否正确 (errorcode: %d)' % self.errorcode)
+            ToastNotifier().show_toast('notification', '无法识别图像中的文字，请检查截图是否正确', '.\\icon\\py.ico')
+        return self.errorcode
+
 #
 
 if __name__ =='__main__':
@@ -299,10 +422,12 @@ if __name__ =='__main__':
     #定义运行参数
     parse = argparse.ArgumentParser()
     parse.add_argument('n', type = int, help = '输入循环次数(int)')
+    parse.add_argument('ocr',type = bool, help = '是否启用OCR判断登录状态')
     args = parse.parse_args()
     #
 
     number = int(args.n)
+    ocr = args.ocr
 
 	#获取程序运行情况，防止重复运行
     with open('status.json','r') as f:
@@ -337,7 +462,14 @@ if __name__ =='__main__':
         logger.info('[main] 循环次数: '+ str(number))
 
         NeteaseHelper().call_netease()
-
+        
+        if ocr == True:
+            time.sleep(2)
+            e = OCR().main()
+            if e != 0:
+                logger.info('[main] 遇到错误，程序即将退出 (errorcode: %d)' % e)
+                exit()
+        
         with open('status.json','r') as f:
             content = json.load(f)
             content['lastrun'] = time.strftime('%j', time.localtime())
@@ -369,8 +501,22 @@ if __name__ =='__main__':
     elif run_done == True:
         pass
     ToastNotifier().show_toast('notification', '程序运行完成', '.\\icon\\py.ico')
-#Python WNDPROC handler failed
-#Traceback (most recent call last):
-#  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python310\lib\site-packages\win10toast\__init__.py", line 153, in on_destroy
-#    Shell_NotifyIcon(NIM_DELETE, nid)
-#pywintypes.error: (-2147467259, 'Shell_NotifyIcon', '未指定的错误')
+
+
+
+
+
+# 使用win10toast时遇到的错误
+
+# 
+# Python WNDPROC handler failed
+# Traceback (most recent call last):
+#   File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python310\lib\site-packages\win10toast\__init__.py", line 153, in on_destroy
+#     Shell_NotifyIcon(NIM_DELETE, nid)
+# pywintypes.error: (-2147467259, 'Shell_NotifyIcon', '未指定的错误')
+# 
+
+# 
+# WNDPROC return value cannot be converted to LRESULT
+# TypeError: WPARAM is simple, so must be an int object (got NoneType)
+# 
