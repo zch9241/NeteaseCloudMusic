@@ -1,7 +1,8 @@
-# Author: zch9241 <github.com/zch9241><zch2426936965@gmail.com>。保留所有权利。
+# <NeteaseCloudMusic> Copyright (C) <2023>  <zch9241>
 # 
-# 版权声明：该软件（NeteaseCloudMusic）为「zch」所有，转载请附上本声明。
-# Apache 2.0
+# Author: zch9241 <github.com/zch9241><zch2426936965@gmail.com>
+# 
+# GNU GENERAL PUBLIC LICENSE Version 3
 # 
 # version: 1.5.alpha
 # 
@@ -20,6 +21,8 @@
 # v1.5.alpha 程序的重构版本（基于pywinauto），减少冗余代码、功能和外部程序调用
 #            更改ln102你的cloudmusic程序路径和ln112循环次数即可使用
 #
+
+print('<NeteaseCloudMusic> Copyright (C) <2023>  <zch9241>')
 
 from pywinauto.application import Application
 import time
