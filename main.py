@@ -53,57 +53,46 @@ import Ui_qt5design
 class RunThread(QThread):
     #设置信号
     output_ = pyqtSignal(str)
-    
-    def __init__(self, logger: logging.Logger,
-                  cur_time , end_time, 
-                  n, firstrun, played_list, 
-                  playflag
-                    ) -> None:
-        
-        #获取父类的变量
-        self.logger = logger
-        self.cur_time, self.end_time = cur_time,end_time
-        self.n = n
-        self.firstrun = firstrun
-        self.playflag = playflag
-        #
-        self.played_list = played_list
-        
+    def __init__(self) -> None:        
         super().__init__()
     
 
     def output_emit_util(self):
         ## 每次调用都重置output
         # 创建一个输出到字符串的处理器
-        self.output = StringIO()
-        self.handler = logging.StreamHandler(self.output)
-        self.handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        self.handler.setFormatter(formatter)
-        self.logger.addHandler(self.handler)
+        global output_t1, handler_t1, formatter_t1, logger
+        output_t1 = StringIO()
+        handler_t1 = logging.StreamHandler(output_t1)
+        handler_t1.setLevel(logging.DEBUG)
+        formatter_t1 = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler_t1.setFormatter(formatter_t1)
+        #
+        logger.addHandler(handler_t1)
 
     def output_emit(self):
         '''
         将RunThread的log输出至窗口
         '''
-        output_text = self.output.getvalue()
-        self.output_.emit(output_text)
+        output_text_t1 = output_t1.getvalue()
+        self.output_.emit(output_text_t1)
 
     #覆写run方法
     def run(self):
         #创建进程实例
-        self.app = Application('uia').start(r'D:\Program Files\Netease\CloudMusic\cloudmusic.exe')
+        global app_t1, dlg_t1, n, played_list
+        played_list = []
+        app_t1 = Application('uia').start(r'D:\Program Files\Netease\CloudMusic\cloudmusic.exe')
         self.output_emit_util()
-        self.logger.debug('进程实例已创建: %s' % self.app)
+        logger.debug('进程实例已创建: %s' % app_t1)
         self.output_emit()
         #创建窗口实例
-        self.dlg = self.app['Dialog']     
+        dlg_t1 = app_t1['Dialog']     
         time.sleep(5)           #等待窗口加载完成
         #dlg.print_control_identifiers()
 
         pyautogui.hotkey('ctrl', 'alt', 'p')
 
-        for i in range(self.n):
+        for i in range(n):
             self.time_manager()
 
         pyautogui.hotkey('ctrl', 'alt', 'p')
@@ -122,7 +111,7 @@ class RunThread(QThread):
             end = time.time()
             last = end-start
             self.output_emit_util()
-            self.logger.debug(
+            logger.debug(
                 self.executing_time.__name__ + str(func) 
                 + '执行时间: ' + str(round(last, 3)) + 's'
                 )
@@ -133,141 +122,151 @@ class RunThread(QThread):
 
     @executing_time
     def time_monitor(self):
-        self.text = self.dlg['Document']     #目标控件(只要是print_control_identifiers()方法输出的控件就可直接访问)
-        self.t = str(self.text.texts())      #控件文本
+        global text, dlg_t1
+        text = dlg_t1['Document']     #目标控件(只要是print_control_identifiers()方法输出的控件就可直接访问)
+        t = str(text.texts())      #控件文本
 
-        self.middle_var = self.t.split(' ')
-        self.end_time = self.middle_var[-26]
-        self.cur_time = self.middle_var[-35]
+        middle_var = t.split(' ')
+        end_time = middle_var[-26]
+        cur_time = middle_var[-35]
 
-        return self.cur_time,self.end_time
+        return cur_time, end_time
 
     def time_manager(self):
-        self.cur_time2,self.cur_time4 = 0,0
+        global cur_time0, cur_time1, cur_time2, cur_time3, cur_time4
+        global end_time0, end_time1, end_time2, end_time3, end_time4
+        global played_list, title_t1, playflag
+        cur_time2,cur_time4 = 0,0
 
-        self.cur_time0,self.end_time0 = self.time_monitor()        #独立变量防干扰
-        self.minute = int(self.end_time0.split(':')[0])
-        self.title = self.dlg.texts()                         #原曲名
+        cur_time0,end_time0 = self.time_monitor()        #独立变量防干扰
+        minute = int(end_time0.split(':')[0])
+        title_t1 = dlg_t1.texts()                         #原曲名
 
         self.output_emit_util()
-        self.logger.info(self.time_manager.__name__ +
-                         '当前曲目:' + str(self.title)[2:-2].replace(r'\xa0', ' ') + 
-                         '总时长: ' + self.end_time0)
+        logger.info(self.time_manager.__name__ +
+                         ' 当前曲目:' + str(title_t1)[2:-2].replace(r'\xa0', ' ') + 
+                         ' 总时长: ' + end_time0)
         self.output_emit()
         
         self.output_emit_util()
-        self.logger.info(self.time_manager.__name__ + 
-                         '计数:' + str(len(self.played_list)))
+        logger.info(self.time_manager.__name__ + 
+                         ' 计数:' + str(len(played_list)))
         self.output_emit()
 
-        if self.minute >= 1:                                                 #时间超过一分钟，需要检测时间来切歌
+        if minute >= 1:                                                 #时间超过一分钟，需要检测时间来切歌
             self.output_emit_util()
-            self.logger.info(self.time_manager.__name__ + '时长超过1min, 启用监测')
+            logger.info(self.time_manager.__name__ + ' 时长超过1min, 启用监测')
             self.output_emit()
             while True:
-                self.cur_time1,self.end_time1 = self.time_monitor()
-                self.title1 = self.dlg.texts()                                    #当前曲名
+                cur_time1,end_time1 = self.time_monitor()
+                title1 = dlg_t1.texts()                                    #当前曲名
                 
                 self.output_emit_util()
-                self.logger.debug(self.time_manager.__name__ + '当前时间: %s' % self.cur_time1)
+                logger.debug(self.time_manager.__name__ + ' 当前时间: %s' % cur_time1)
                 self.output_emit()
 
 
-                if self.title1 != self.title:
+                if title1 != title_t1:
                     self.output_emit_util()
-                    self.logger.warning(self.time_manager.__name__ + '侦测到计划外的切歌')
+                    logger.warning(self.time_manager.__name__ + ' 侦测到计划外的切歌')
                     self.output_emit()
 
-                    self.played_list.append(self.title)
+                    played_list.append(title_t1)
                     
                     self.output_emit_util()
-                    self.logger.warning(self.time_manager.__name__ + '结束当前循环...')
+                    logger.warning(self.time_manager.__name__ + ' 结束当前循环...')
                     self.output_emit()
                     
                     break
-                elif self.cur_time1 == self.cur_time2 and self.playflag == True:
+                elif cur_time1 == cur_time2 and playflag == True:
                     self.output_emit_util()
-                    self.logger.warning(self.time_manager.__name__ + '侦测到计划外的停止, 再次播放...')
+                    logger.warning(self.time_manager.__name__ + ' 侦测到计划外的停止, 再次播放...')
                     self.output_emit()
                     
                     pyautogui.hotkey('ctrl', 'alt', 'p')
-                elif int(self.cur_time1.split(':')[0]) >= 1:
-                    self.played_list.append(self.title)
+                elif int(cur_time1.split(':')[0]) >= 1:
+                    played_list.append(title_t1)
                     
                     self.output_emit_util()
-                    self.logger.debug(self.time_manager.__name__ + '切歌...')
+                    logger.debug(self.time_manager.__name__ + ' 切歌...')
                     self.output_emit()
                     
                     pyautogui.hotkey('ctrl', 'alt', 'right')
                     break
-                self.cur_time2,self.end_time2 = self.time_monitor()
+                cur_time2,end_time2 = self.time_monitor()
         else:
             self.output_emit_util()
-            self.logger.info(self.time_manager.__name__ + '时长不足1min, 禁用监测')
+            logger.info(self.time_manager.__name__ + ' 时长不足1min, 禁用监测')
             self.output_emit()
             
             while True:
-                self.cur_time3,self.end_time3 = self.time_monitor()
-                self.title2 = self.dlg.texts()
-                if self.title2 != self.title:
-                    self.played_list.append(self.title)
+                cur_time3,end_time3 = self.time_monitor()
+                title2 = dlg_t1.texts()
+                if title2 != title_t1:
+                    played_list.append(title_t1)
                     
                     self.output_emit_util()
-                    self.logger.debug(self.time_manager.__name__ + '较短的歌曲已播放结束, 结束当前循环...')
+                    logger.debug(self.time_manager.__name__ + ' 较短的歌曲已播放结束, 结束当前循环...')
                     self.output_emit()
                     
                     break
-                elif self.cur_time3 == self.cur_time4 and self.playflag == True:
+                elif cur_time3 == cur_time4 and playflag == True:
                     self.output_emit_util()
-                    self.logger.warning(self.time_manager.__name__ + '侦测到计划外的停止, 再次播放...')
+                    logger.warning(self.time_manager.__name__ + ' 侦测到计划外的停止, 再次播放...')
                     self.output_emit()
                     
                     pyautogui.hotkey('ctrl', 'alt', 'p')
-                self.cur_time4,self.end_time4 = self.time_monitor()
+                cur_time4,end_time4 = self.time_monitor()
                 time.sleep(2)
 
 
 
 class MainWin(QWidget):
     def __init__(self):
-        self.cur_time, self.end_time = 0,0
-        self.n = 0
-        self.firstrun = True
-        self.playflag = True
-        self.played_list = []
-
         super().__init__()
+        self.init_var()
         self.init_logger()
         self.init_ui()
+    
+    def init_var(self):
+        global cur_time, end_time, n, firstrun, playflag, echoflag, played_list
+        cur_time, end_time = 0,0
+        n = 0
+        firstrun = True
+        playflag = True
+        echoflag = True
+        played_list = []
     
     def init_logger(self):
         '''
         日志相关
         '''
+        global logger, formatter
         # 创建一个日志记录器
-        self.logger = logging.getLogger(' ' + __name__ + ' ')
-        self.logger.setLevel(logging.DEBUG)
+        logger = logging.getLogger(' ' + __name__ + ' ')
+        logger.setLevel(logging.DEBUG)
         #
-        self.formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-        self.handler_ = logging.StreamHandler()
-        self.handler_.setFormatter(self.formatter)
+        handler_ = logging.StreamHandler()
+        handler_.setFormatter(formatter)
         
-        self.logger.addHandler(self.handler_)
+        logger.addHandler(handler_)
 
     def init_ui(self):
         '''
         UI初始化设置
         '''
-        self.ui = Ui_qt5design.Ui_MainWindow()
-        self.window = QMainWindow()
-        self.ui.setupUi(self.window)
+        global ui, window
+        ui = Ui_qt5design.Ui_MainWindow()
+        window = QMainWindow()
+        ui.setupUi(window)
 
         #信号绑定槽函数
-        self.ui.pushButtonRun.clicked.connect(self.pushButtonRunfunc)
-        self.ui.pushButtonStop.clicked.connect(self.pushButtonStop)
-        self.ui.horizontalSliderCount.sliderMoved.connect(self.Scountreader)
-        self.ui.lineEditCount.editingFinished.connect(self.Lcountreader)
+        ui.pushButtonRun.clicked.connect(self.pushButtonRunfunc)
+        ui.pushButtonStop.clicked.connect(self.pushButtonStop)
+        ui.horizontalSliderCount.sliderMoved.connect(self.Scountreader)
+        ui.lineEditCount.editingFinished.connect(self.Lcountreader)
 
 
 
@@ -275,9 +274,10 @@ class MainWin(QWidget):
         '''
         打印输出(更新窗口文本)
         '''
-        originaltext = self.ui.textBrowserLogger.toPlainText()
+        if echoflag == True:
+            originaltext = ui.textBrowserLogger.toPlainText()
 
-        self.ui.textBrowserLogger.setText(originaltext + text)
+            ui.textBrowserLogger.setText(originaltext + text)
     
     
     def outputter_util(self):
@@ -286,16 +286,17 @@ class MainWin(QWidget):
         '''
         ## 每次调用都重置output
         # 创建一个输出到字符串的处理器
-        self.output = StringIO()
-        self.handler_ = logging.StreamHandler(self.output)
-        self.handler_.setFormatter(self.formatter)
-        self.logger.addHandler(self.handler_)
+        global output, logger, formatter
+        output = StringIO()
+        handler_ = logging.StreamHandler(output)
+        handler_.setFormatter(formatter)
+        logger.addHandler(handler_)
     def outputter(self):
         '''
         将MainWin的log输出至窗口
         '''
-        self.output_text = self.output.getvalue()
-        self.output_to_window(self.output_text)
+        output_text = output.getvalue()
+        self.output_to_window(output_text)
     
     def outputter2(self, text):
         '''
@@ -307,36 +308,37 @@ class MainWin(QWidget):
         '''
         子线程启动入口
         '''
-        self.thread = RunThread(self.logger, self.cur_time, self.end_time,
-                                self.n, self.firstrun, self.played_list, 
-                                self.playflag)
+        self.thread = RunThread()
         #启动线程
+        logger.info(self.run_thread.__name__, ' 启动子线程...')
+
         self.thread.start()
         self.thread.output_.connect(self.outputter2)
 
 
 
     def pause(self):
-        self.runflag = True
+        global cur_time, end_time, n, firstrun, playflag, runflag, echoflag, played_list
+        runflag = True
         while True:
-            if self.runflag == True:
+            if runflag == True:
                 time.sleep(0.1)
             else:
-                self.playflag = False
+                playflag = False
                 
                 self.outputter_util()
-                self.logger.info(self.pause.__name__ + ' 已暂停 \n')
+                logger.info(self.pause.__name__ + ' 已暂停 \n')
                 self.outputter()
 
                 pyautogui.hotkey('ctrl', 'alt', 'p')
-                while self.runflag == False:
+                while runflag == False:
                     time.sleep(0.1)
                 
-                self.playflag = True
-                self.echoflag = True
+                playflag = True
+                echoflag = True
                 
                 self.outputter_util()
-                self.logger.info(self.pause.__name__ + ' 已恢复 \n')
+                logger.info(self.pause.__name__ + ' 已恢复 \n')
                 self.outputter()
 
                 pyautogui.hotkey('ctrl', 'alt', 'p')
@@ -344,52 +346,56 @@ class MainWin(QWidget):
 
     #---------------------------槽函数----
     def pushButtonRunfunc(self):
+        global runflag, firstrun
         self.outputter_util()
-        self.logger.debug('恢复')
+        logger.debug('恢复...')
         self.outputter()
-        self.runflag = True
-        if self.firstrun == True:
-            self.logger.info(self.pushButtonRunfunc.__name__ + ' 启动程序 \n')
+        runflag = True
+        if firstrun == True:
+            logger.info(self.pushButtonRunfunc.__name__ + ' 启动程序 \n')
             self.run_thread()
-            self.firstrun = False
-        self.ui.pushButtonRun.setDisabled(True)
-        self.ui.pushButtonStop.setEnabled(True)
+            firstrun = False
+        ui.pushButtonRun.setDisabled(True)
+        ui.pushButtonStop.setEnabled(True)
     def pushButtonStop(self):
+        global runflag
         self.outputter_util()
-        self.logger.info(self.pushButtonStop.__name__ + ' 暂停程序 \n')
+        logger.info(self.pushButtonStop.__name__ + ' 暂停程序 \n')
         self.outputter()
-       
-        self.runflag = False
-        self.ui.pushButtonStop.setDisabled(True)
-        self.ui.pushButtonRun.setEnabled(True)
+
+        runflag = False
+        ui.pushButtonStop.setDisabled(True)
+        ui.pushButtonRun.setEnabled(True)
     def Scountreader(self):
-        self.ui.pushButtonRun.setEnabled(True)
-        self.n = self.ui.horizontalSliderCount.value()
-        self.ui.lineEditCount.setText(str(self.n))
+        global n
+        ui.pushButtonRun.setEnabled(True)
+        n = ui.horizontalSliderCount.value()
+        ui.lineEditCount.setText(str(n))
         
         self.outputter_util()
-        self.logger.debug(self.n)
+        logger.debug(n)
         self.outputter()
     def Lcountreader(self):
-        self.ui.pushButtonRun.setEnabled(True)
+        global n
+        ui.pushButtonRun.setEnabled(True)
         try:
-            self.n = int(self.ui.lineEditCount.text())
-            self.ui.horizontalSliderCount.setValue(self.n)
+            n = int(ui.lineEditCount.text())
+            ui.horizontalSliderCount.setValue(n)
             self.outputter_util()
-            self.logger.debug(self.n)
+            logger.debug(n)
             self.outputter()
         except ValueError:
             self.outputter_util()
-            self.logger.warn(self.Lcountreader.__name__, " 输入的值有误 value = '%s'" % self.ui.lineEditCount.text())
+            logger.warn(self.Lcountreader.__name__, " 输入的值有误 value = '%s'" % ui.lineEditCount.text())
             self.outputter()
     #---------------------------槽函数----
-
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     mainwin = MainWin()
-    mainwin.window.show()
+    #window: global var from MainWin().init_ui()
+    window.show()
     sys.exit(app.exec_())
 
     
