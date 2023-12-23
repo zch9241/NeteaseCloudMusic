@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # <NeteaseCloudMusic> Copyright (C) <2023>  <zch9241>
 # 
 # Author: zch9241 <github.com/zch9241><zch2426936965@gmail.com>
@@ -24,12 +25,12 @@
 # 
 # 
 
-import time
+
+# 该module会导致报错，忽略即可
+# WNDPROC return value cannot be converted to LRESULT
+# TypeError: WPARAM is simple, so must be an int object (got NoneType)
 from win10toast import ToastNotifier
-import logging
-import pyautogui
-from io import StringIO
-from functools import wraps
+# 
 
 # 以下两个import会导致PyQt5报错:QWindowsContext: OleInitialize() failed:  "COM error 0xffffffff80010106 RPC_E_CHANGED_MODE (Unknown error 0x080010106)"
 # 或pywinauto报错[WinError -2147417850] 无法在设置线程模式后对其加以更改。
@@ -37,22 +38,41 @@ from functools import wraps
 #设置单线程(STA)模式，防止pyqt5与pywinauto冲突
 import sys
 sys.coinit_flags = 2
-from pywinauto.application import Application 
+import pywinauto
+from pywinauto.application import Application
 # 
 
 from PyQt5.QtCore import QObject, QThread, Qt, pyqtSignal
-from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow
+from PyQt5.QtWidgets import *
+
+import time
+import logging
+import pyautogui
+from io import StringIO
+from functools import wraps
+
 
 import Ui_qt5design
 
 
 
+class Threadstatus(QThread):
+    status = pyqtSignal(list)
+    def __init__(self, thread_: QThread):
+        super().__init__()
+        self.thread_ = thread_
+    def run(self):
+        while True:
+            lst = [self.thread_.objectName, self.thread_.isRunning()]
+            self.status.emit(lst)
+            time.sleep(0.1)
 
 
 
 class RunThread(QThread):
     #设置信号
     output_ = pyqtSignal(str)
+    terminate_ = pyqtSignal(bool)
     def __init__(self) -> None:        
         super().__init__()
     
@@ -98,8 +118,8 @@ class RunThread(QThread):
         pyautogui.hotkey('ctrl', 'alt', 'p')
 
         #print(played_list)
-
-        ToastNotifier().show_toast('notification', '程序运行完成', '.\\icon\\py.ico')
+        if notifyflag == True:
+            ToastNotifier().show_toast('notification', '程序运行完成', '.\\icon\\py.ico')
 
 
 
@@ -124,13 +144,26 @@ class RunThread(QThread):
     def time_monitor(self):
         global text, dlg_t1
         text = dlg_t1['Document']     #目标控件(只要是print_control_identifiers()方法输出的控件就可直接访问)
-        t = str(text.texts())      #控件文本
+        try:
+            t = str(text.texts())      #控件文本
+            middle_var = t.split(' ')
+            end_time = middle_var[-26]
+            cur_time = middle_var[-35]
+            return cur_time, end_time
+        except pywinauto.findwindows.ElementNotFoundError as e:
+            self.output_emit_util()
+            logger.fatal(self.time_monitor.__name__ + ' ' + str(e))
+            self.output_emit()
+            
+            self.output_emit_util()
+            logger.info(self.time_monitor.__name__ + ' 请重新运行本程序')
+            self.output_emit()
 
-        middle_var = t.split(' ')
-        end_time = middle_var[-26]
-        cur_time = middle_var[-35]
+            self.terminate_.emit(True)
 
-        return cur_time, end_time
+            ToastNotifier().show_toast('出现了错误', '请重新运行本程序 \n' + e, '.\\icon\\py.ico')
+
+
 
     def time_manager(self):
         global cur_time0, cur_time1, cur_time2, cur_time3, cur_time4
@@ -229,13 +262,15 @@ class MainWin(QWidget):
         self.init_ui()
     
     def init_var(self):
-        global cur_time, end_time, n, firstrun, playflag, echoflag, played_list
+        global cur_time, end_time, n, firstrun, playflag, echoflag, notifyflag, played_list
         cur_time, end_time = 0,0
         n = 0
         firstrun = True
         playflag = True
         echoflag = True
+        notifyflag = True
         played_list = []
+
     
     def init_logger(self):
         '''
@@ -263,10 +298,12 @@ class MainWin(QWidget):
         ui.setupUi(window)
 
         #信号绑定槽函数
-        ui.pushButtonRun.clicked.connect(self.pushButtonRunfunc)
+        ui.pushButtonRun.clicked.connect(self.pushButtonRun)
         ui.pushButtonStop.clicked.connect(self.pushButtonStop)
         ui.horizontalSliderCount.sliderMoved.connect(self.Scountreader)
         ui.lineEditCount.editingFinished.connect(self.Lcountreader)
+        ui.checkBoxIfNotify.clicked.connect(self.CheckboxNotifyreader)
+        
 
 
 
@@ -303,19 +340,28 @@ class MainWin(QWidget):
         接受RunThread的singal(output_)并将其log输出至窗口
         '''
         self.output_to_window(text)
+    
+    def outputter3(self, status:list):
+        '''
+        接受Threadstatus的singal并将其输出至窗口
+        '''
+        ui.threadradioButton.setChecked(status[1])
+        ui.threadradioButton.setText(str(status[0]).split(' ')[4])
 
+    #--------------------------------------RunThread()相关--------
     def run_thread(self):
         '''
-        子线程启动入口
+        RunThread子线程启动入口
         '''
         self.thread = RunThread()
         #启动线程
         logger.info(self.run_thread.__name__, ' 启动子线程...')
-
         self.thread.start()
+        self.thread.setObjectName('RunThread')
+
+        #绑定子线程类中的信号
         self.thread.output_.connect(self.outputter2)
-
-
+        self.thread.terminate_.connect(self.terminate_)
 
     def pause(self):
         global cur_time, end_time, n, firstrun, playflag, runflag, echoflag, played_list
@@ -343,18 +389,36 @@ class MainWin(QWidget):
 
                 pyautogui.hotkey('ctrl', 'alt', 'p')
 
+    def terminate_(self, flag):
+        if flag == True:
+            self.thread.terminate()
+    #--------------------------------------RunThread()相关--------
+    
+    def thread_status(self, threadname):
+        '''
+        Threadstatus子线程启动入口
+        '''
+        self.thread1 = Threadstatus(thread_ = self.thread)
+        self.thread1.start()
+
+        self.thread1.status.connect(self.outputter3)
+
 
     #---------------------------槽函数----
-    def pushButtonRunfunc(self):
+    def pushButtonRun(self):
         global runflag, firstrun
-        self.outputter_util()
-        logger.debug('恢复...')
-        self.outputter()
+
         runflag = True
         if firstrun == True:
-            logger.info(self.pushButtonRunfunc.__name__ + ' 启动程序 \n')
+            logger.info(self.pushButtonRun.__name__ + ' 启动程序 \n')
             self.run_thread()
+            self.thread_status(threadname = 'RunThread')
             firstrun = False
+        else:
+            self.outputter_util()
+            logger.debug('恢复...')
+            self.outputter()
+        
         ui.pushButtonRun.setDisabled(True)
         ui.pushButtonStop.setEnabled(True)
     def pushButtonStop(self):
@@ -386,8 +450,14 @@ class MainWin(QWidget):
             self.outputter()
         except ValueError:
             self.outputter_util()
-            logger.warn(self.Lcountreader.__name__, " 输入的值有误 value = '%s'" % ui.lineEditCount.text())
+            logger.warn(self.Lcountreader.__name__, " 输入的值有误 value = " + ui.lineEditCount.text())
             self.outputter()
+    def CheckboxNotifyreader(self):
+        global notifyflag
+        notifyflag = ui.checkBoxIfNotify.isChecked()
+        self.outputter_util()
+        logger.debug('notify = ' + str(notifyflag))
+
     #---------------------------槽函数----
 
 
