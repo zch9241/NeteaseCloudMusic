@@ -4,6 +4,8 @@
 # Author: zch9241 <github.com/zch9241><zch2426936965@gmail.com>
 # 
 # GNU GENERAL PUBLIC LICENSE Version 3
+# This program comes with ABSOLUTELY NO WARRANTY
+# This is free software, and you are welcome to redistribute it under certain conditions
 # 
 # version: 1.6
 # 
@@ -35,7 +37,7 @@ from win10toast import ToastNotifier
 # 以下两个import会导致PyQt5报错:QWindowsContext: OleInitialize() failed:  "COM error 0xffffffff80010106 RPC_E_CHANGED_MODE (Unknown error 0x080010106)"
 # 或pywinauto报错[WinError -2147417850] 无法在设置线程模式后对其加以更改。
 # 详情: https://www.cnpython.com/qa/628847
-#设置单线程(STA)模式，防止pyqt5与pywinauto冲突
+# 设置单线程(STA)模式，防止pyqt5与pywinauto冲突
 import sys
 sys.coinit_flags = 2
 import pywinauto
@@ -303,8 +305,8 @@ class MainWin(QWidget):
         ui.horizontalSliderCount.sliderMoved.connect(self.Scountreader)
         ui.lineEditCount.editingFinished.connect(self.Lcountreader)
         ui.checkBoxIfNotify.clicked.connect(self.CheckboxNotifyreader)
-        
-
+        #copyright
+        self.copyright()
 
 
     def output_to_window(self, text):
@@ -459,6 +461,16 @@ class MainWin(QWidget):
         logger.debug('notify = ' + str(notifyflag))
 
     #---------------------------槽函数----
+    def copyright(self):
+        self.outputter_util()
+        msg = """
+            <NeteaseCloudMusic> Copyright (C) <2023>  <zch9241> \n
+            GNU GENERAL PUBLIC LICENSE Version 3 \n
+            This program comes with ABSOLUTELY NO WARRANTY \n
+            This is free software, and you are welcome to redistribute it under certain conditions
+        """
+        logger.info(msg)
+        self.outputter()
 
 
 if __name__ == '__main__':
